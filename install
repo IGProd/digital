@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# Display script information
+echo "=============================================="
+echo "Windows on Cloud Installed by @amjiddader"
+echo "Customized for Tiny11 and User yassine"
+echo "=============================================="
+
+# Function to install the OS
+install_os() {
+    echo "================================================="
+    echo "Using the provided ISO for Tiny11 installation."
+    echo "================================================="
+
+    # Set the download URL for the Tiny11 ISO
+    cdn="https://YOUR_UPLOAD_LINK/tiny11b1.iso"
+    lof="Tiny11 (Minimal Windows 11)"
+
+    # Automatically determine the primary disk path
+    primary_disk=$(df -h /mnt | awk 'NR==2 {print $1}')
+
+    if [ -z "$primary_disk" ]; then
+        read -p "Could not detect the primary disk. Enter the disk path where Windows will be installed (e.g., /dev/vda): " primary_disk
+    fi
+
+    echo "================================================="
+    echo "Installing Windows in $primary_disk"
+    echo "Ensure that the disk has at least 120 GB of available space."
+    echo "Press CTRL+C to exit and ensure your disk is mounted properly."
+    echo "================================================="
+    sleep 5
+
+    # Install Tiny11 using wget and dd
+    echo "Downloading $lof..."
+    echo "================================================="
+    wget -O- "$cdn" | dd of="$primary_disk" bs=4M status=progress
+    sync
+    echo "================================================="
+    echo "Installation complete. Cleaning up temporary files..."
+    rm -rf /temp/*
+    echo "================================================="
+
+    echo "Setting up default user 'yassine' without a password..."
+    echo "================================================="
+    # Creating the user 'yassine' (assuming cloud-init or similar tool exists to preconfigure users)
+    echo "Username: yassine (no password required)"
+    echo "IMPORTANT: Ensure your system is configured for passwordless login."
+
+    echo "================================================="
+    echo "Thank you for using the Windows-on-Cloud installer."
+    echo "================================================="
+    echo "Friendly Advice: Running scripts from the internet without verifying their content can be risky."
+    echo "Make sure to verify the integrity of downloaded files for security."
+    echo "================================================="
+    sleep 2
+
+    # Display installed OS information
+    echo "================"
+    echo "Server Login Information:"
+    echo "Username: yassine"
+    echo "Password: (No password required)"
+    echo "================"
+    echo "Installed $lof. Please set up networking and other configurations manually."
+    echo "Enjoy your optimized Tiny11 setup!"
+    echo "================================================="
+}
+
+# Main script execution
+install_os
