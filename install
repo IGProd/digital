@@ -3,74 +3,63 @@
 # Display script information
 echo "=============================================="
 echo "Windows on Cloud Installed by @amjiddader"
-echo "Customized for Tiny11 on DigitalOcean with VirtIO Drivers"
+echo "Customized for Tiny11 on DigitalOcean with Recovery Mode"
 echo "=============================================="
 
 # Function to install the OS
 install_os() {
     echo "================================================="
     echo "Starting installation of Tiny11 on DigitalOcean."
+    echo "Ensure you're running this script in recovery mode."
     echo "================================================="
 
-    # Set URLs for ISO and VirtIO drivers
+    # Set the download URL for the Tiny11 ISO
     iso_url="https://dl.filehorse.com/win/desktop-enhancements/tiny11/tiny11b1.iso?st=9KEDEN9iakdaKVVEXvUIXw&e=1737852734&fn=tiny11b1.iso"
-    virtio_url="https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso"
-    
-    # Temporary file paths
     iso_file="/tmp/tiny11b1.iso"
-    virtio_iso="/tmp/virtio-win.iso"
 
-    # Automatically determine the primary disk path
+    # Automatically detect the primary disk
     primary_disk=$(lsblk -d -o NAME,TYPE | grep disk | awk 'NR==1 {print "/dev/" $1}')
-
     if [ -z "$primary_disk" ]; then
-        read -p "Could not detect the primary disk. Enter the disk path where Windows will be installed (e.g., /dev/vda): " primary_disk
+        echo "Unable to detect the primary disk. Please specify it manually."
+        read -p "Enter the disk path (e.g., /dev/vda): " primary_disk
     fi
 
+    # Confirm the disk selection
     echo "================================================="
+    echo "Tiny11 will be installed on: $primary_disk"
+    echo "All data on this disk will be erased!"
+    echo "================================================="
+    read -p "Type 'yes' to confirm: " confirm
+    if [ "$confirm" != "yes" ]; then
+        echo "Installation aborted."
+        exit 1
+    fi
+
+    # Download the Tiny11 ISO
     echo "Downloading Tiny11 ISO..."
     wget -O "$iso_file" "$iso_url"
     if [ $? -ne 0 ]; then
-        echo "Failed to download Tiny11 ISO. Exiting."
+        echo "Failed to download Tiny11 ISO. Check the URL or your network connection."
         exit 1
     fi
 
-    echo "Downloading VirtIO Drivers ISO..."
-    wget -O "$virtio_iso" "$virtio_url"
-    if [ $? -ne 0 ]; then
-        echo "Failed to download VirtIO drivers. Exiting."
-        exit 1
-    fi
-
-    echo "================================================="
+    # Write the ISO to the primary disk
     echo "Writing Tiny11 ISO to $primary_disk..."
     dd if="$iso_file" of="$primary_disk" bs=4M status=progress
     if [ $? -ne 0 ]; then
-        echo "Failed to write the ISO to the disk. Ensure the disk is accessible and not in use."
+        echo "Failed to write the ISO to the disk. Ensure the disk is accessible."
         exit 1
     fi
     sync
 
-    echo "================================================="
-    echo "Mounting VirtIO Drivers..."
-    mkdir -p /mnt/virtio
-    mount -o loop "$virtio_iso" /mnt/virtio
-    echo "VirtIO Drivers are available in /mnt/virtio."
-
-    echo "================================================="
+    # Clean up temporary files
     echo "Cleaning up temporary files..."
     rm -f "$iso_file"
-    rm -f "$virtio_iso"
-    echo "================================================="
-
-    echo "Setting up default user 'yassine' without a password..."
-    echo "================================================="
-    echo "Username: yassine (no password required)"
-    echo "IMPORTANT: Ensure your system is configured for passwordless login."
 
     echo "================================================="
-    echo "Thank you for using the Windows-on-Cloud installer."
-    echo "Reboot the system to boot into the installed Tiny11 OS."
+    echo "Installation complete."
+    echo "Change the boot option to 'Boot from Hard Disk' in the DigitalOcean control panel."
+    echo "Then reboot the server to boot into Tiny11."
     echo "================================================="
 }
 
