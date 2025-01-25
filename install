@@ -3,19 +3,22 @@
 # Display script information
 echo "=============================================="
 echo "Windows on Cloud Installed by @amjiddader"
-echo "Customized for Tiny11 and User yassine"
+echo "Customized for Tiny11 on DigitalOcean with VirtIO Drivers"
 echo "=============================================="
 
 # Function to install the OS
 install_os() {
     echo "================================================="
-    echo "Using the provided ISO for Tiny11 installation."
+    echo "Starting installation of Tiny11 on DigitalOcean."
     echo "================================================="
 
-    # Set the download URL for the Tiny11 ISO
+    # Set URLs for ISO and VirtIO drivers
     iso_url="https://dl.filehorse.com/win/desktop-enhancements/tiny11/tiny11b1.iso?st=9KEDEN9iakdaKVVEXvUIXw&e=1737852734&fn=tiny11b1.iso"
+    virtio_url="https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso"
+    
+    # Temporary file paths
     iso_file="/tmp/tiny11b1.iso"
-    lof="Tiny11 (Minimal Windows 11)"
+    virtio_iso="/tmp/virtio-win.iso"
 
     # Automatically determine the primary disk path
     primary_disk=$(lsblk -d -o NAME,TYPE | grep disk | awk 'NR==1 {print "/dev/" $1}')
@@ -25,32 +28,39 @@ install_os() {
     fi
 
     echo "================================================="
-    echo "Installing Windows in $primary_disk"
-    echo "Ensure that the disk has at least 120 GB of available space."
-    echo "Press CTRL+C to exit and ensure your disk is mounted properly."
-    echo "================================================="
-    sleep 5
-
-    # Download the ISO file
-    echo "Downloading $lof..."
+    echo "Downloading Tiny11 ISO..."
     wget -O "$iso_file" "$iso_url"
     if [ $? -ne 0 ]; then
-        echo "Failed to download the ISO. Check the URL or your network connection."
+        echo "Failed to download Tiny11 ISO. Exiting."
         exit 1
     fi
 
-    # Write the ISO to the disk
-    echo "Writing the ISO to $primary_disk..."
+    echo "Downloading VirtIO Drivers ISO..."
+    wget -O "$virtio_iso" "$virtio_url"
+    if [ $? -ne 0 ]; then
+        echo "Failed to download VirtIO drivers. Exiting."
+        exit 1
+    fi
+
+    echo "================================================="
+    echo "Writing Tiny11 ISO to $primary_disk..."
     dd if="$iso_file" of="$primary_disk" bs=4M status=progress
     if [ $? -ne 0 ]; then
         echo "Failed to write the ISO to the disk. Ensure the disk is accessible and not in use."
         exit 1
     fi
-
     sync
+
     echo "================================================="
-    echo "Installation complete. Cleaning up temporary files..."
+    echo "Mounting VirtIO Drivers..."
+    mkdir -p /mnt/virtio
+    mount -o loop "$virtio_iso" /mnt/virtio
+    echo "VirtIO Drivers are available in /mnt/virtio."
+
+    echo "================================================="
+    echo "Cleaning up temporary files..."
     rm -f "$iso_file"
+    rm -f "$virtio_iso"
     echo "================================================="
 
     echo "Setting up default user 'yassine' without a password..."
@@ -60,20 +70,7 @@ install_os() {
 
     echo "================================================="
     echo "Thank you for using the Windows-on-Cloud installer."
-    echo "================================================="
-    echo "Friendly Advice: Running scripts from the internet without verifying their content can be risky."
-    echo "Make sure to verify the integrity of downloaded files for security."
-    echo "================================================="
-    sleep 2
-
-    # Display installed OS information
-    echo "================"
-    echo "Server Login Information:"
-    echo "Username: yassine"
-    echo "Password: (No password required)"
-    echo "================"
-    echo "Installed $lof. Please set up networking and other configurations manually."
-    echo "Enjoy your optimized Tiny11 setup!"
+    echo "Reboot the system to boot into the installed Tiny11 OS."
     echo "================================================="
 }
 
