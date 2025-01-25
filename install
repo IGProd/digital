@@ -13,7 +13,7 @@ install_os() {
     echo "================================================="
 
     # Set the download URL for the Tiny11 ISO
-    cdn="https://YOUR_UPLOAD_LINK/tiny11b1.iso"
+    cdn="https://dl.filehorse.com/win/desktop-enhancements/tiny11/tiny11b1.iso?st=9KEDEN9iakdaKVVEXvUIXw&e=1737852734&fn=tiny11b1.iso"
     lof="Tiny11 (Minimal Windows 11)"
 
     # Automatically determine the primary disk path
