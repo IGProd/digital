@@ -13,11 +13,12 @@ install_os() {
     echo "================================================="
 
     # Set the download URL for the Tiny11 ISO
-    cdn="https://dl.filehorse.com/win/desktop-enhancements/tiny11/tiny11b1.iso?st=9KEDEN9iakdaKVVEXvUIXw&e=1737852734&fn=tiny11b1.iso"
+    iso_url="https://dl.filehorse.com/win/desktop-enhancements/tiny11/tiny11b1.iso?st=9KEDEN9iakdaKVVEXvUIXw&e=1737852734&fn=tiny11b1.iso"
+    iso_file="/tmp/tiny11b1.iso"
     lof="Tiny11 (Minimal Windows 11)"
 
     # Automatically determine the primary disk path
-    primary_disk=$(df -h /mnt | awk 'NR==2 {print $1}')
+    primary_disk=$(lsblk -d -o NAME,TYPE | grep disk | awk 'NR==1 {print "/dev/" $1}')
 
     if [ -z "$primary_disk" ]; then
         read -p "Could not detect the primary disk. Enter the disk path where Windows will be installed (e.g., /dev/vda): " primary_disk
@@ -30,19 +31,30 @@ install_os() {
     echo "================================================="
     sleep 5
 
-    # Install Tiny11 using wget and dd
+    # Download the ISO file
     echo "Downloading $lof..."
-    echo "================================================="
-    wget -O- "$cdn" | dd of="$primary_disk" bs=4M status=progress
+    wget -O "$iso_file" "$iso_url"
+    if [ $? -ne 0 ]; then
+        echo "Failed to download the ISO. Check the URL or your network connection."
+        exit 1
+    fi
+
+    # Write the ISO to the disk
+    echo "Writing the ISO to $primary_disk..."
+    dd if="$iso_file" of="$primary_disk" bs=4M status=progress
+    if [ $? -ne 0 ]; then
+        echo "Failed to write the ISO to the disk. Ensure the disk is accessible and not in use."
+        exit 1
+    fi
+
     sync
     echo "================================================="
     echo "Installation complete. Cleaning up temporary files..."
-    rm -rf /temp/*
+    rm -f "$iso_file"
     echo "================================================="
 
     echo "Setting up default user 'yassine' without a password..."
     echo "================================================="
-    # Creating the user 'yassine' (assuming cloud-init or similar tool exists to preconfigure users)
     echo "Username: yassine (no password required)"
     echo "IMPORTANT: Ensure your system is configured for passwordless login."
 
